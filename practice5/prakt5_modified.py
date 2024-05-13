@@ -77,16 +77,7 @@ def frank_wolfe(x0, max_iter=10, tol = 1e-5):
         
         grad_optimized_values.append(grad_optimization.fun)  
         print("gradient optimized value: ", grad_optimization.fun)
-        
-        if np.linalg.norm(x - grad_optimized_point) < tol:
-            print()
-            print("---")
-            print("Breaking: linalg.norm < tolerance")
-            print("\ttolerance: ", tol)
-            print("\tnorm: ", np.linalg.norm(x1_ - x))
-            print("---")
-            print()
-            break
+
 
         metric_lambda_function = lambda lamda: f_doted(x + lamda * (grad_optimized_point - x))
 
@@ -115,7 +106,20 @@ def frank_wolfe(x0, max_iter=10, tol = 1e-5):
         
         F_last = abs(specified_function.fun)
 
-        x = x + lamda * (grad_optimized_point - x)
+        x_new = x + lamda * (grad_optimized_point - x)
+
+        if np.linalg.norm(x - x_new) < tol:
+            print()
+            print("---")
+            print("Breaking: linalg.norm < tolerance")
+            print("\ttolerance: ", tol)
+            print("\tnorm: ", np.linalg.norm(x - x_new))
+            print("---")
+            print()
+            break
+        
+        x = x_new
+
         specified_points.append(x)
         print("specified point: ", x)
 
