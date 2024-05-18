@@ -1,8 +1,8 @@
 import numpy as np
 from scipy.optimize import linprog
-from scipy.optimize import minimize_scalar
 import matplotlib.pyplot as plt
 import math
+from sympy import symbols, diff, simplify, solveset
 
 
 
@@ -79,46 +79,54 @@ def frank_wolfe(x0, max_iter=10, tol = 1e-5):
         print("gradient optimized value: ", grad_optimization.fun)
 
 
-        metric_lambda_function = lambda lamda: f_doted(x + lamda * (grad_optimized_point - x))
+        lambda_symbol = symbols("lambda")
+        x1 = simplify(x[0] + lambda_symbol*(grad_optimized_point[0] - x[0]))
+        x2 = simplify(x[1] + lambda_symbol*(grad_optimized_point[1] - x[1]))
+        g_x = simplify(11*x1**2 - 10*x1*x2 - 168.133*x1 + 11*x2**2 - 140.4*x2  + 8383.15)
 
-        specified_function = minimize_scalar(metric_lambda_function, bounds=(0, 1), method='bounded')
+        diff_g_x = diff(g_x)
 
-        lamda = max(specified_function.x, minimal_lambda)
-        lambdas.append(lamda)
-        print("specified lambda: ", lamda)
-        
-        specified_values.append(specified_function.fun)
-        print("specified function value: ", specified_function.fun)
+        lambda_sol = solveset(diff_g_x, lambda_symbol).args[0]
+        print("specified lambda:", lambda_sol)
         
         
+        lamda = float(lambda_sol)
+
+        x_ = x + lamda*(grad_optimized_point - x)
+        specified_value = f_doted(x_)
         
-        if abs(abs(specified_function.fun) - F_last) < tol:
+        specified_values.append(specified_value)
+        print("specified function value: ", specified_value)
+        
+        
+        
+        if abs(abs(specified_value) - F_last) < tol:
             print()
             print("---")
             print("Breaking: abs(function_difference) < tolerance")
             print("\ttolerance: ", tol)
             print("\tlast_function:", F_last)
-            print("\tspecified_function:", specified_function.fun)
-            print("\tABS(function_difference): ", abs(abs(specified_function.fun) - F_last))
+            print("\tspecified_function:", specified_value)
+            print("\tABS(function_difference): ", abs(abs(specified_value) - F_last))
             print("---")
             print()
             break
+  
         
-        F_last = abs(specified_function.fun)
+        F_last = abs(specified_value)
 
-        x_new = x + lamda * (grad_optimized_point - x)
-
-        if np.linalg.norm(x - x_new) < tol:
+        
+        if np.linalg.norm(x - x_) < tol:
             print()
             print("---")
             print("Breaking: linalg.norm < tolerance")
             print("\ttolerance: ", tol)
-            print("\tnorm: ", np.linalg.norm(x - x_new))
+            print("\tnorm: ", np.linalg.norm(x - x_))
             print("---")
             print()
             break
         
-        x = x_new
+        x = x_
 
         specified_points.append(x)
         print("specified point: ", x)
@@ -208,14 +216,14 @@ def drawing2():
 
 
 
-def drawing3():
+def drawing3(iterations = 1000):
     '''
     Нарисует результаты большого количества итераций Франк-Вульфа
     '''
     x0 = [26, 13]
     tolerance = 1e-5
 
-    iterations = 1000
+    
     colors = ['blue', 'orange', 'green', 'red', 'purple', 'yellow', 'pink']
     c_len = len(colors)
     
@@ -249,6 +257,7 @@ def drawing3():
     
 
 def cyclic_drawing_frank_wolfe(x0, iterations, tolerance):
+    iterations = iterations+1
     colors = ['blue', 'orange', 'green', 'red', 'purple', 'yellow', 'pink']
     c_len = len(colors)
     for j in range(1, iterations):
@@ -263,12 +272,6 @@ def cyclic_drawing_frank_wolfe(x0, iterations, tolerance):
         default_points, gradient_vectors, grad_optimized_points, grad_optimized_values, lambdas, specified_points, specified_values = frank_wolfe(x0, max_iter=j, tol=tolerance)
 
         x = np.linspace(graphic_borders[0], graphic_borders[1], 400)
-
-
-
-        # короче здесь уползает итератор
-        # нужно придумать, что делдать с градиентами, которые могут по своему желанию уползти
-        # возможно, нужно добавить что-то в градиенты, и уже на основе этого жить
 
         
         for i in range(len(default_points)):
@@ -288,11 +291,14 @@ def cyclic_drawing_frank_wolfe(x0, iterations, tolerance):
             if i == len(default_points)-1:
                 plt.scatter(x=specified_point[0], y=specified_point[1], label=f"X_{i+1}[{round(specified_point[0], 3)}, {round(specified_point[1], 3)}], P(X_{i+1}) = {round(specified_value, 4)}", color=colors[(i+1)%c_len])
                 
-                plt.scatter(x = gradient_optimized_point[0], y = gradient_optimized_point[1], label = f"grad_{i}", alpha=0.3, s=70, color=colors[i%c_len])
+                plt.scatter(x = gradient_optimized_point[0], y = gradient_optimized_point[1], label = f"grad_optimized_point[{i}]", alpha=0.3, s=70, color=colors[i%c_len])
 
                 y = -next_gradient[0]*(x-specified_point[0])/next_gradient[1] + specified_point[1]
+                y1 = next_gradient[1]*(x-default_point[0])/next_gradient[0] + default_point[1]
                 
-                plt.plot(x, y, alpha=0.3, color=colors[i%c_len], label=f'line{i}')
+                plt.plot(x, y, alpha=0.3, color=colors[i%c_len], label=f'line[{i}]')
+                plt.plot(x, y1, alpha=0.6, color="gray", label=f'grad_optimization_line[{i}]')
+
 
                 plt.plot([default_point[0], specified_point[0]], [default_point[1], specified_point[1]], linestyle='--', color=colors[i%c_len])
 
@@ -314,8 +320,8 @@ def cyclic_drawing_frank_wolfe(x0, iterations, tolerance):
 
 
 
-def generate_graphics(drawer):
-    drawer()
+def generate_graphics(drawer, iterations=1000):
+    drawer(iterations)
 
     plt.xlabel('x1')
     plt.ylabel('x2')
@@ -342,14 +348,15 @@ if __name__ == "__main__":
     graphic_borders = [-n, 6*n] # не редактировать
 
     minimal_lambda = 0.01 #чем меньше, тем больше итераций нужно для остановки по function difference
+    iterations = 1000
     
     
 
     # принимает только функции drawing(1-3)
-    generate_graphics(drawing3)
+    generate_graphics(drawing3, iterations)
 
     
-    #cyclic_drawing_frank_wolfe([26, 13], 7, 1e-5)
+    #cyclic_drawing_frank_wolfe([26, 13], 5, 1e-5)
 
 
 

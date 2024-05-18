@@ -1,8 +1,9 @@
 import numpy as np
 from scipy.optimize import linprog
-from scipy.optimize import minimize_scalar
+#from scipy.optimize import minimize_scalar
 import matplotlib.pyplot as plt
 import math
+
 
 
 
