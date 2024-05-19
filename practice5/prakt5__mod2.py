@@ -289,7 +289,7 @@ def cyclic_drawing_frank_wolfe(x0, iterations, tolerance):
 
             
             if i == len(default_points)-1:
-                plt.scatter(x=specified_point[0], y=specified_point[1], label=f"X_{i+1}[{round(specified_point[0], 3)}, {round(specified_point[1], 3)}], P(X_{i+1}) = {round(specified_value, 4)}", color=colors[(i+1)%c_len])
+                
                 
                 plt.scatter(x = gradient_optimized_point[0], y = gradient_optimized_point[1], label = f"grad_optimized_point[{i}]", alpha=0.3, s=70, color=colors[i%c_len])
 
@@ -303,7 +303,9 @@ def cyclic_drawing_frank_wolfe(x0, iterations, tolerance):
                 plt.plot([default_point[0], specified_point[0]], [default_point[1], specified_point[1]], linestyle='--', color=colors[i%c_len])
 
                 plt.quiver(default_point[0], default_point[1], -gradient[0]/graphic_borders[1], -gradient[1]/graphic_borders[1], alpha=0.6, color='gray', label=f'grad(P(X_{i}))[{round(-gradient[0], 3)}, {round(-gradient[1])}]')
-        
+
+                plt.scatter(x=specified_point[0], y=specified_point[1], label=f"X_{i+1}[{round(specified_point[0], 3)}, {round(specified_point[1], 3)}], P(X_{i+1}) = {round(specified_value, 4)}", color=colors[(i+1)%c_len])
+
         plt.legend(loc = 'upper right', fontsize='small')
         plt.xlim(graphic_borders[0], graphic_borders[1])
         plt.ylim(graphic_borders[0], graphic_borders[1])
@@ -353,10 +355,10 @@ if __name__ == "__main__":
     
 
     # принимает только функции drawing(1-3)
-    generate_graphics(drawing3, iterations)
+    #generate_graphics(drawing3, iterations)
 
     
-    #cyclic_drawing_frank_wolfe([26, 13], 5, 1e-5)
+    cyclic_drawing_frank_wolfe([26, 13], 5, 1e-5)
 
 
 
